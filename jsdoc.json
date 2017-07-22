@@ -3,7 +3,7 @@
     "allowUnknownTags": true
   },
   "opts": {
-    "destination": "./html/docs/js"
+    "destination": "./docs/js"
   },
   "templates": {
     "cleverLinks": false,

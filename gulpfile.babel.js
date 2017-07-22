@@ -35,16 +35,7 @@ gulp.task('lint', () =>
 gulp.task('doc', cb => {
   const config = require('./jsdoc.json');
   gulp
-    .src(
-      [
-        'app/pages/**/*.js',
-        'app/scripts/**/*.js',
-        '!app/scripts/jquery.min.js',
-        '!app/scripts/bodymovin.js',
-        './README.md'
-      ],
-      { read: false }
-    )
+    .src(['app/**/*.js', './README.md'], { read: false })
     .pipe(doc(config, cb));
 });
 
@@ -62,6 +53,14 @@ gulp.task('images', () =>
     )
     .pipe(gulp.dest(`${dist}/images`))
     .pipe($.size({ title: 'images' }))
+);
+
+// Fonts
+gulp.task('fonts', () =>
+  gulp
+    .src('app/fonts/**/*')
+    .pipe(gulp.dest(`${resourceDist}/fonts`))
+    .pipe($.size({ title: 'fonts' }))
 );
 
 // Copy all files at the root level (app)
@@ -94,6 +93,7 @@ gulp.task('styles', () => {
     'android >= 4.4',
     'bb >= 10'
   ];
+  const postcssPlugins = [duplicates];
 
   // For best performance, don't add Sass partials to `gulp.src`
   return (
@@ -112,6 +112,10 @@ gulp.task('styles', () => {
       .pipe($.if('*.css', $.cssnano()))
       .pipe($.size({ title: 'styles' }))
       .pipe($.sourcemaps.write('./'))
+      //.pipe(concatCss('style.css'))
+      //.pipe(postcss(postcssPlugins))
+      //.pipe(replace(`url("../../images`, `url("/${resourceFolderName}/images`))
+      //.pipe(replace(`url("../../fonts`, `url("/${resourceFolderName}/fonts`))
       .pipe(gulp.dest(`${dist}/styles`))
       .pipe(gulp.dest('.tmp/styles'))
   );
@@ -135,6 +139,7 @@ gulp.task('scripts', () =>
     .pipe($.sourcemaps.write())
     .pipe(gulp.dest('.tmp/scripts'))
     .pipe($.concat('main.min.js'))
+    //.pipe(replace('../../animations/', `/${resourceFolderName}/animations/`))
     .pipe($.uglify({ preserveComments: 'some' }))
     // Output files
     .pipe($.size({ title: 'scripts' }))
@@ -154,6 +159,16 @@ gulp.task('html', () => {
           noAssets: true
         })
       )
+      //***************************** */
+      /* replace text
+      .pipe(replace('../../images/', `/${resourceFolderName}/images/`))
+      */
+      /* Rename file / change path
+      .pipe(
+        rename(function(path) {
+          path.dirname += '/View';
+        })
+      )*/
       // Minify any HTML
       .pipe(
         $.if(
@@ -178,7 +193,9 @@ gulp.task('html', () => {
 });
 
 // Clean output directory
-gulp.task('clean', () => del(['.tmp', `${dist}/*`, `!${dist}/.git`], { dot: true }));
+gulp.task('clean', () =>
+  del(['.tmp', `${dist}/*`, `!${dist}/.git`], { dot: true })
+);
 
 // Watch files for changes & reload
 gulp.task('serve', ['scripts', 'styles'], () => {
@@ -222,7 +239,7 @@ gulp.task('serve:dist', ['default'], () =>
 gulp.task('default', ['clean'], cb =>
   runSequence(
     'styles',
-    ['lint', 'html', 'scripts', 'images', 'copy'],
+    ['lint', 'html', 'scripts', 'images', 'copy', 'doc'],
     'generate-service-worker',
     cb
   )
